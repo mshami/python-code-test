@@ -11,6 +11,22 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from os import environ
+from django.core.exceptions import ImproperlyConfigured
+
+
+def _get_env_variable(var_name, default=None):
+    """
+    Get the environment variable or return exception."""
+    try:
+        return environ[var_name]
+    except KeyError:
+        if default:
+            return default
+        else:
+            error_msg = "Set the %s env variable" % var_name
+            raise ImproperlyConfigured(error_msg)
+
 
 DOCKER = os.getenv('USER') != 'ubuntu'
 
@@ -39,6 +55,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
+    'rest_framework',
+    'rangefilter',
     'shiptrader',
 ]
 
@@ -73,21 +92,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'testsite.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
+        'NAME': _get_env_variable('POSTGRES_DATABASE', default='ostmodern'),
+        'USER': _get_env_variable('POSTGRES_USER', default='vagrant'),
+        'PASSWORD': _get_env_variable('POSTGRES_PASSWORD', default='vagrant'),
+        'HOST': _get_env_variable('POSTGRES_HOST', default='localhost'),
+        'PORT': '',
     }
 }
 
-if DOCKER:
-    DATABASES['default']['NAME'] = 'postgres'
-    DATABASES['default']['HOST'] = 'postgresql'
-    DATABASES['default']['USER'] = 'postgres'
-    DATABASES['default']['PASSWORD'] = 'postgres'
+# if DOCKER:
+#     DATABASES['default']['NAME'] = 'postgres'
+#     DATABASES['default']['HOST'] = 'postgresql'
+#     DATABASES['default']['USER'] = 'postgres'
+#     DATABASES['default']['PASSWORD'] = 'postgres'
 
 
 # Password validation
